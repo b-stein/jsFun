@@ -643,11 +643,22 @@ const turingPrompts = {
     // cohort1804: 10.5
     // }
 
-    const result = 'REPLACE WITH YOUR RESULT HERE';
+    const result = cohorts.reduce((accu, cohort) => {
+			let instructorCount = 0;
+			instructors.forEach(instructor => {
+				if (instructor.module === cohort.module) {
+					instructorCount++;
+				}
+			})
+			accu[`cohort${cohort.cohort}`] = cohort.studentCount / instructorCount;
+			return accu;
+		}, {});
     return result;
 
     // Annotation:
-    // Write your annotation here as a comment
+		// reduce()
+		// find teacher # per cohort
+		// return obj, keys: cohort #, values: studentCount / teachers
   },
 
   modulesPerTeacher() {
@@ -665,12 +676,27 @@ const turingPrompts = {
     //     Will: [1, 2, 3, 4]
     //   }
 
-    const result = 'REPLACE WITH YOUR RESULT HERE';
-    return result;
+    const result = instructors.reduce((accu, instructor) => {
+			accu[instructor.name] = [];
 
+			cohorts.forEach(cohort => {
+				cohort.curriculum.forEach(topic => {
+					if (instructor.teaches.includes(topic) === true) {
+						if (!accu[instructor.name].includes(cohort.module)) {
+							accu[instructor.name].push(cohort.module)
+						}
+					}
+				})
+			})
+			return accu;
+		}, {});
+    return result;
+	},
     // Annotation:
-    // Write your annotation here as a comment
-  },
+		// return 1 obj -- reduce()
+		// key: instructor.name, value: array modules able to teach
+		// forEach over cohorts.curriculum,
+		// if cohorts.curriculum === any instructor.teaches, add that cohort.module to key valu ^^  },
 
   curriculumPerTeacher() {
     // Return an object where each key is a curriculum topic and each value is
@@ -682,29 +708,29 @@ const turingPrompts = {
     //   recursion: [ 'Pam', 'Leta' ]
     // }
 
-    const result = 'REPLACE WITH YOUR RESULT HERE';
-    return result;
+    const result = cohorts.reduce((accu, cohort) => {
+			cohort.curriculum.forEach(topic => {
+				(!accu[topic])	? accu[topic] = [] : null;
 
-    // Annotation:
-    // Write your annotation here as a comment
-  }
-};
-
-
-
-
-
+				instructors.forEach(instructor => { instructor.teaches.forEach(taughtTopic => { //replace if's w/ a filter()
+						if (taughtTopic === topic) {
+							(!accu[topic].includes(instructor.name)) ? accu[topic].push(instructor.name) : null;
+						}})
+				})
+			})
+			return accu;
+			}, {})
+    	return result;
+		}
+		
+		// Annotation:
+		// return 1 obj -- reduce()
+		// key: curriculum topic, value: teachers who teach it
+	}
 
 // ---------------------------------------------------------------------------
 // ---------------------------------------------------------------------------
 // ---------------------------------------------------------------------------
-// ---------------------------------------------------------------------------
-// ---------------------------------------------------------------------------
-
-
-
-
-
 
 // DATASET: bosses, sidekicks from ./datasets/bosses
 const bossPrompts = {
@@ -716,30 +742,36 @@ const bossPrompts = {
     //   { bossName: 'Ursula', sidekickLoyalty: 20 },
     //   { bossName: 'Scar', sidekickLoyalty: 16 }
     // ]
+		
+	const bossKeys = Object.keys(bosses);
 
-    const result = 'REPLACE WITH YOUR RESULT HERE';
-    return result;
+	const result = bossKeys.map(boss => {
+		let newObj = {};
+		newObj['bossName'] = bosses[boss].name;
+		newObj['sidekickLoyalty'] = 0;
+
+		sidekicks.forEach(sidekick => {
+			if (sidekick.boss === bosses[boss].name) {
+				newObj['sidekickLoyalty'] += sidekick.loyaltyToBoss;
+			}
+		})
+
+		return newObj;
+	})
+
+  return result;
 
     // Annotation:
-    // Write your annotation here as a comment
+		// create array of obj's
+		// key1= bossName, value= bossName
+		// key2= sidekickLoyalty, value= sidekick #
+		// map() ?
   }
 };
 
-
-
-
-
-
 // ---------------------------------------------------------------------------
 // ---------------------------------------------------------------------------
 // ---------------------------------------------------------------------------
-// ---------------------------------------------------------------------------
-// ---------------------------------------------------------------------------
-
-
-
-
-
 
 // DATASET: constellations, stars } from ./datasets/astronomy
 const astronomyPrompts = {
@@ -757,13 +789,29 @@ const astronomyPrompts = {
     //     constellation: 'Orion',
     //     lightYearsFromEarth: 640,
     //     color: 'red' }
-    // ]
+		// ]
+		
+		const constellKeys = Object.keys(constellations);
 
-    const result = 'REPLACE WITH YOUR RESULT HERE';
-    return result;
+    const result = stars.reduce((accu, star) => {
+			constellKeys.forEach(constellName => {
+				if (constellations[constellName].stars.includes(star.name)) {
+					accu.push(star);
+				}
+			})
+			return accu;
+		}, [])
+		return result;
 
     // Annotation:
-    // Write your annotation here as a comment
+		// array of objects required
+		// reduce over stars array
+		// 3 conditions, if obj constellations includes current star name
+		// push that star obj -> accu array
+
+		// ANOTHER WAY?
+		// Object.keys constellations ?
+		// .map then .filter ?
   },
 
   starsByColor() {
@@ -777,11 +825,22 @@ const astronomyPrompts = {
     //   red: [{obj}]
     // }
 
-    const result = 'REPLACE WITH YOUR RESULT HERE';
+    const result = stars.reduce((accu, star) => {
+			if (!accu[star.color]) accu[star.color] = [];
+
+			const accuKeys = Object.keys(accu);
+			accuKeys.forEach(key => {
+				if (key === star.color) accu[key].push(star)})
+	
+			return accu;
+		}, {});
     return result;
 
     // Annotation:
-    // Write your annotation here as a comment
+		// doesn't need to touch constellation obj at all
+		// reduce over stars array
+		// Object.keys so you can compare if the star's prop name
+		// is = to the key string name
   },
 
   constellationsStarsExistIn() {
@@ -799,42 +858,62 @@ const astronomyPrompts = {
     //    "The Little Dipper" ]
 
 
-    const result = 'REPLACE WITH YOUR RESULT HERE';
-    return result;
+    const result = stars.filter(star => star.constellation.length > 1);
+
+		const resultSort = result.sort((a, b) => 
+		a.visualMagnitude - b.visualMagnitude)
+		.map(star => star.constellation);
+
+		return resultSort;
 
     // Annotation:
-    // Write your annotation here as a comment
+		// iterate over array, return array
+		// filter to get rid of the element w/ no characters in name
+		// sort based on visualMagnitude
+		// .map to only return the name of the constellation
   }
 };
 
-
-
-
-
-
 // ---------------------------------------------------------------------------
 // ---------------------------------------------------------------------------
 // ---------------------------------------------------------------------------
-// ---------------------------------------------------------------------------
-// ---------------------------------------------------------------------------
-
-
-
-
-
 
 // DATASET: charaters, weapons from ./datasets/ultima
 const ultimaPrompts = {
   totalDamage() {
 
     // Return the sum of the amount of damage for all the weapons that our characters can use
-    // Answer => 113
+		// Answer => 113
+		
+		const weaponKeys = Object.keys(weapons);
+		const characterKeys = Object.keys(characters);
 
-    const result = 'REPLACE WITH YOUR RESULT HERE';
-    return result;
+    const result = characterKeys.reduce((accu, character) => {
+			characters[character].weapons.forEach(weapon => {
+				const foundW = weaponKeys.find(weaponKey => weaponKey === weapon);
+
+				accu += weapons[foundW].damage;
+			})
+			return accu;
+		}, 0);
+
+    return result; //then add for every time a user uses the weapon
 
     // Annotation:
-    // Write your annotation here as a comment
+		// 1 total num value returned, use reduce
+		// make object.keys for both sets of objects
+		// iterate over each character (key),
+		// check each weapons property of the char
+		// syntax: (object ->) characters[charKey].weapons
+		// forEach over that
+		// search the weaponKeys in the forEach, checking if the weapon ===
+		// this char's weapon
+		// if it does, add it to the accumulator counter
+		// syntax (array ->) weapons[foundWeap].damage
+
+		// w/ obj.keys make sure if you're using it to access that spot
+		// in the original object, you must set up 
+		// origArrayName[objKeysName].propertyName
   },
 
   charactersByTotal() {
@@ -848,23 +927,11 @@ const ultimaPrompts = {
     // Annotation:
     // Write your annotation here as a comment
   },
-};
-
-
-
-
-
+}
 
 // ---------------------------------------------------------------------------
 // ---------------------------------------------------------------------------
 // ---------------------------------------------------------------------------
-// ---------------------------------------------------------------------------
-// ---------------------------------------------------------------------------
-
-
-
-
-
 
 // DATASET: dinosaurs, humans, movies from ./datasets/dinosaurs
 const dinosaurPrompts = {
@@ -974,7 +1041,7 @@ const dinosaurPrompts = {
     // Annotation:
     // Write your annotation here as a comment
   }
-};
+}
 
 module.exports = {
   breweryPrompts,
