@@ -588,7 +588,7 @@ describe("PROTOTYPES", () => {
 	}),
 	
 	describe("Ultima Prompts", () => {
-    it.only("totalDamage", () => {
+    it("totalDamage", () => {
       const e = ultimaPrompts.totalDamage();
       expect(e).to.deep.equal(113)
 		}),
@@ -631,7 +631,7 @@ describe("PROTOTYPES", () => {
       })
 		}),
 		
-		it("averageAgePerMovie", () => {
+		it.only("averageAgePerMovie", () => {
       const e = dinosaurPrompts.averageAgePerMovie();
       expect(e).to.deep.equal({
         'Steven Spielberg': {
