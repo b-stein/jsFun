@@ -920,8 +920,29 @@ const ultimaPrompts = {
 
     // Return the sum damage and total range for each character as an object.
     // ex: [ { Avatar: { damage: 27, range: 24 }, { Iolo: {...}, ...}
+		const weaponKeys = Object.keys(weapons);
 
-    const result = 'REPLACE WITH YOUR RESULT HERE';
+    const result = characters.map(char => {
+			const weaponDamage = char.weapons.reduce((acc, weapon) => {
+				const foundW = weaponKeys.find(weaponKey => weaponKey === weapon);
+				acc += weapons[foundW].damage;
+				return acc;
+			}, 0);
+			const weaponRange = char.weapons.reduce((acc, weapon) => {
+				const foundW = weaponKeys.find(weaponKey => weaponKey === weapon);
+				acc += weapons[foundW].range;
+				return acc;
+			}, 0)
+				char.weapons.forEach(weapon => {
+					foundW = weaponKeys.find(weaponKey => weaponKey === weapon)
+				})
+			return { 
+				[char.name]: { 
+					damage: weaponDamage,
+					range: weaponRange
+				}
+			}
+		});
     return result;
 
     // Annotation:
@@ -944,13 +965,28 @@ const dinosaurPrompts = {
     //   'Jurassic Park III': 9,
     //   'Jurassic World': 11,
     //   'Jurassic World: Fallen Kingdom': 18
-    // }
+		// }
+		
+		const dinoKeys = Object.keys(dinosaurs);
 
-    const result = 'REPLACE WITH YOUR RESULT HERE';
+    const result = movies.reduce((acc, movie) => {
+			let dinoCount = 0;
+			movie.dinos.forEach(dino => {
+				dinoKeys.forEach(key => {
+					if (dino === key) {
+						if (dinosaurs[key].isAwesome) dinoCount ++;
+					}
+				})
+			})
+			acc[movie.title] = dinoCount;
+
+			return acc;
+		}, {});
     return result;
 
     // Annotation:
-    // Write your annotation here as a comment
+		// iterate over movies array
+		// key: movie title, value: dinos.length
   },
 
   averageAgePerMovie() {
@@ -978,12 +1014,36 @@ const dinosaurPrompts = {
           }
       }
     */
+	 
+	 const actorKeys = Object.keys(humans);
 
-    const result = 'REPLACE WITH YOUR RESULT HERE';
+	 const result = movies.reduce((movieObj, movie) => {
+		 let avgAge = movie.cast.reduce((acc, actor) => {
+			 let actorAge = 0;
+			 actorKeys.forEach(key => {
+				 if (key === actor) {
+					 actorAge = movie.yearReleased - humans[key].yearBorn;
+				 }
+			 })
+			 acc += actorAge;
+			 return acc;
+		 }, 0);
+	 
+		 movieObj[movie.director][movie.title] = Math.floor(avgAge / movie.cast.length);
+	 
+		 return movieObj;
+		 }, {
+		 'Steven Spielberg': { 'Jurassic Park': 0, 'The Lost World: Jurassic Park': 0 },
+		 'Joe Johnston': { 'Jurassic Park III': 0 },
+		 'Colin Trevorrow': { 'Jurassic World': 0 },
+		 'J. A. Bayona': { 'Jurassic World: Fallen Kingdom': 0 }
+	 });
     return result;
 
     // Annotation:
-    // Write your annotation here as a comment
+		// iterate over movies, key is movie.director
+		// value is obj { movie.name : avg age of actors }
+		// reduce over for actors avg age on release year
   },
 
   uncastActors() {
